@@ -32,13 +32,15 @@ type DmQueryBuilder struct {
 // Select will join the fields
 // Select("*") Select("id","name")  Select(`deploy_cluster_host_rel.id`, "name")
 func (qb *DmQueryBuilder) Select(fields ...string) QueryBuilder {
-	if len(fields) == 1 && fields[0] == "*" {
-		qb.tokens = append(qb.tokens, "SELECT", strings.Join(fields, dmCommaSpace))
-		return qb
-	}
 	for i, field := range fields {
+		if strings.Contains(field, "*") {
+			if len(strings.Split(field, ".")) == 2 {
+				fields[i] = dmCommaFiled + strings.Split(field, ".")[0] + dmCommaFiled + "." + strings.Split(field, ".")[1]
+			}
+			continue
+		}
 		if len(strings.Split(field, ".")) == 2 {
-			fields[i] = dmCommaFiled + strings.Split(field, ".")[0] + dmCommaFiled + "." + dmCommaFiled + strings.Split(field, ".")[1] + dmCommaFiled
+			fields[i] =  strings.Split(field, ".")[0]  + "." + dmCommaFiled + strings.Split(field, ".")[1] + dmCommaFiled
 			continue
 		}
 		fields[i] = dmCommaFiled + field + dmCommaFiled
@@ -101,7 +103,9 @@ func (qb *DmQueryBuilder) RightJoin(table string) QueryBuilder {
 
 // On join with on cond
 // On(`"deploy_cluster_host_rel"."sid" = "deploy_host"."sid"`)
+// On(`t1."sid" = t2."sid"`)    table has alias
 func (qb *DmQueryBuilder) On(cond string) QueryBuilder {
+
 	qb.tokens = append(qb.tokens, "ON", cond)
 	return qb
 }

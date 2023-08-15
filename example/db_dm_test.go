@@ -6,24 +6,65 @@ import (
 	"github.com/reaperhero/go-orm/orm"
 	"testing"
 )
+// dm tips
+// 关联查询，必须要有on条件
+// 查询时，值是字符串，必须要用单引号
+// curd操作，表和字段需要用双引号, 字段别名和表别名 不需要加双引号
+// 查询系统自带表或者字段，不用加引号
+
+
+
+
 
 func init() {
 	orm.RegisterModel(new(Student),new(Post),new(Profile),new(Tag))
 	orm.RegisterDriver("dm", orm.DRDM)
 	// ?logLevel=all
 
-	orm.RegisterDataBase("default", "dm", "dm://SYSDBA:SYSDBA001@172.16.104.165:5236")
+	err := orm.RegisterDataBase(alias, "dm", "dm://SYSDBA:SYSDBA001@172.16.104.165:5236")
+	if err!=nil{
+		panic(err)
+	}
 	orm.Debug = true
+	orm.SetMaxIdleConns(alias, 10) // 设置数据库最大空闲连接数
+	orm.SetMaxOpenConns(alias, 50) // 设置数据库最大连接数
+
 }
 
 var o orm.Ormer
 
+const  alias = "default"
+
 func TestName(t *testing.T)  {
+	o = orm.NewOrmUsingDB(alias)
+	runSyncDB()
+	insert()
+	builder()
+}
+
+
+func runSyncDB()  {
 	err := orm.RunSyncdb("default", true, true)
 	if err != nil {
 		return
 	}
-	
+}
+func builder() {
+	var maps []orm.ParamsList
+	builder, _ := orm.NewQueryBuilder("dm")
+	builder = builder.Select("deploy_product_list.*").
+		From("deploy_cluster_smooth_upgrade_product_rel").
+		LeftJoin("deploy_product_list").
+		On(`"deploy_product_list"."id"="deploy_cluster_smooth_upgrade_product_rel"."pid"`).
+		Where(`"pid" = ? AND "deploy_cluster_smooth_upgrade_product_rel"."is_deleted"=0`)
+	list, err := o.Raw(builder.String()).SetArgs(1).ValuesList(&maps)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(list)
+}
+
+func insert()  {
 	o = orm.NewOrmUsingDB("default")
 	student := &Student{
 		Name:  "chenqiangjun",
@@ -46,14 +87,4 @@ func TestName(t *testing.T)  {
 	}
 
 	fmt.Println(insert)
-
-
-}
-
-func builder() {
-	qb, _ := orm.NewQueryBuilder("dm")
-	qb.Select("t1.id", "t2.name").From("deploy_host01 t2").LeftJoin("deploy_host02 t1").On(`t1."instance_id" = t2."id"`).And(`"t1.instance_id = t2.id"`).
-		Where(`"t1.id" = "12345678"`).And(`"t2"."is_deleted" = 0`).OrderBy("id").Desc().Limit(10).Offset(20)
-	fmt.Println(qb.String())
-	// SELECT "t1"."id", "t2"."name" FROM "deploy_host01" as t2 LEFT JOIN "deploy_host02" as t1 ON t1."instance_id" = t2."id" AND "t1.instance_id = t2.id" WHERE "t1.id" = "12345678" AND "t2"."is_deleted" = 0 ORDER BY "id" DESC LIMIT 10 OFFSET 20
 }
