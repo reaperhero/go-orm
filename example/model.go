@@ -22,28 +22,28 @@ package example
 //   do_nothing  什么都不做。忽略。
 
 type Student struct {
-	Id      int      `orm:"column(id);auto"`
-	Name    string   `orm:"column(name)"`
-	Email   string   `orm:"column(email)"`
-	Profile *Profile `orm:"rel(one);on_delete(cascade)"` // 一个学生对应一个属性   数据库要先插入profile，然后指定profile结构体
+	Id      int      `orm:"column(ID);auto"`
+	Name    string   `orm:"column(NAME)"`
+	Email   string   `orm:"column(EMAIL)"`
+	Profile *Profile `orm:"column(PROFILE_ID);rel(one);on_delete(cascade)"` // 一个学生对应一个属性   数据库要先插入profile，然后指定profile结构体
 	Posts   []*Post  `orm:"reverse(many)"`               // 一个学生对应多篇文章
 }
 
 type Post struct {
-	Id      int     `orm:"column(id);auto"`
-	Content string   `orm:"column(content)"`
+	Id      int     `orm:"column(ID);auto"`
+	Content string   `orm:"column(CONTENT)"`
 	Student *Student `orm:"rel(fk)"`  // 一个文章对应一个学生
 	Tags    []*Tag   `orm:"rel(m2m)"` // 一篇文章对应多个tag
 }
 
 type Profile struct {
-	Id      int     `orm:"column(id);auto"`
-	Age     int      `orm:"column(age)"`
+	Id      int     `orm:"column(ID);auto"`
+	Age     int      `orm:"column(AGE)"`
 	Student *Student `orm:"reverse(one)"` // 一个属性对应一个学生
 }
 
 type Tag struct {
-	Id    int     `orm:"column(id);auto"`
-	Name  string  `orm:"column(name)"`
+	Id    int     `orm:"column(ID);auto"`
+	Name  string  `orm:"column(NAME)"`
 	Posts []*Post `orm:"reverse(many)"` // 一个tag对应多篇文章
 }

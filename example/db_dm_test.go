@@ -11,8 +11,8 @@ import (
 // 查询时，值是字符串，必须要用单引号
 // curd操作，表和字段需要用双引号, 字段别名和表别名 不需要加双引号
 // 查询系统自带表或者字段，不用加引号
-
-
+// 表和字段都是大写，查询时加不加引号都可以。字段是关键字时必须要加引号
+// 字段为别名时，映射到结构体需要用大写
 
 
 
@@ -37,9 +37,11 @@ const  alias = "default"
 
 func TestName(t *testing.T)  {
 	o = orm.NewOrmUsingDB(alias)
-	runSyncDB()
-	insert()
-	builder()
+	//runSyncDB()
+	query()
+	//runSyncDB()
+	//insert()
+	//builder()
 }
 
 
@@ -87,4 +89,16 @@ func insert()  {
 	}
 
 	fmt.Println(insert)
+}
+
+func query()  {
+	type Options struct {
+		Total int
+	}
+	res := make(orm.Params)
+	_, err := o.Raw(`select count(*) from "sidecar_list"`).RowsToMap(&res,  "COUNT(*)","")
+	if err != nil {
+		panic(err)
+	}
+fmt.Println(res)
 }
